@@ -25,8 +25,15 @@ export default function ViewPage() {
         {/* 3D 뷰어 */}
         <Scene3D />
 
+        {/* 요약 정보 */}
+        <div className="mt-4 bg-gray-800 rounded-lg p-4">
+          <p className="text-sm text-gray-400">
+            <span className="text-white font-medium">요약:</span> 벽 {plan3D.walls.length}개, 문 {plan3D.doors.length}개, 창문 {plan3D.windows.length}개
+          </p>
+        </div>
+
         {/* 안내 */}
-        <div className="mt-6 bg-gray-800 rounded-lg p-4">
+        <div className="mt-4 bg-gray-800 rounded-lg p-4">
           <h3 className="text-white font-medium mb-2">인터랙션 가이드</h3>
           <ul className="text-gray-400 text-sm space-y-1">
             <li>• 드래그: 회전</li>
