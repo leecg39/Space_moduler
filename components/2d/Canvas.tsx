@@ -8,21 +8,27 @@ import type { Wall, Door, Window } from '@/types';
 interface Canvas2DProps {
   width: number;
   height: number;
+  tool?: 'select' | 'wall' | 'door' | 'window' | 'delete';
 }
 
 /**
  * 2D 캔버스 컴포넌트
  * 평면도 이미지를 배경으로 표시하고 벽/문/창문을 오버레이합니다.
  */
-export function Canvas2D({ width, height }: Canvas2DProps) {
+export function Canvas2D({ width, height, tool = 'select' }: Canvas2DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [drawingWall, setDrawingWall] = useState<{ start: { x: number; y: number } | null }>({
+    start: null,
+  });
 
   const plan2D = useAppStore((state) => state.plan.plan2D);
   const originalImage = useAppStore((state) => state.plan.originalImage);
+  const updatePlan2D = useAppStore((state) => state.updatePlan2D);
 
   // 이미지 로드 후 캔버스 크기 조정
   useEffect(() => {
@@ -68,6 +74,53 @@ export function Canvas2D({ width, height }: Canvas2DProps) {
   // 패닝 종료
   const handleMouseUp = () => {
     setIsDragging(false);
+
+    // 벽 그리기 완료
+    if (tool === 'wall' && drawingWall.start) {
+      // 벽 추가 로직은 추후 구현
+      setDrawingWall({ start: null });
+    }
+  };
+
+  // 캔버스 클릭 핸들러
+  const handleCanvasClick = (e: any) => {
+    const stage = e.target.getStage();
+    const pos = stage.getPointerPosition();
+
+    if (tool === 'wall') {
+      if (!drawingWall.start) {
+        setDrawingWall({ start: { x: pos.x, y: pos.y } });
+      } else {
+        // 벽 생성 (임시)
+        const newWall: Wall = {
+          id: crypto.randomUUID(),
+          start: drawingWall.start!,
+          end: { x: pos.x, y: pos.y },
+          thickness: 0.2,
+          height: 2.5,
+        };
+        updatePlan2D({ walls: [...plan2D!.walls, newWall] });
+        setDrawingWall({ start: null });
+      }
+    } else if (tool === 'door') {
+      const newDoor: Door = {
+        id: crypto.randomUUID(),
+        position: { x: pos.x, y: pos.y },
+        width: 0.9,
+        direction: 'horizontal',
+        opens: 'left',
+      };
+      updatePlan2D({ doors: [...plan2D!.doors, newDoor] });
+    } else if (tool === 'window') {
+      const newWindow: Window = {
+        id: crypto.randomUUID(),
+        position: { x: pos.x, y: pos.y },
+        width: 1.2,
+        height: 1.5,
+        fromFloor: 1.0,
+      };
+      updatePlan2D({ windows: [...plan2D!.windows, newWindow] });
+    }
   };
 
   if (!plan2D || !originalImage) {
@@ -96,7 +149,8 @@ export function Canvas2D({ width, height }: Canvas2DProps) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        onClick={handleCanvasClick}
+        style={{ cursor: isDragging ? 'grabbing' : tool === 'select' ? 'grab' : 'crosshair' }}
       >
         <Layer>
           {/* 배경 이미지 */}
