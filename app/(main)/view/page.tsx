@@ -1,0 +1,40 @@
+'use client';
+
+import { Scene3D } from '@/components/3d/Scene';
+
+export default function ViewPage() {
+  return (
+    <main className="min-h-screen bg-gray-900">
+      <div className="max-w-7xl mx-auto p-8">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-white">3D 뷰어</h1>
+            <p className="text-gray-400 mt-1">
+              평면도를 3D로 확인하세요.
+            </p>
+          </div>
+          <button
+            onClick={() => window.history.back()}
+            className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
+          >
+            ← 뒤로 가기
+          </button>
+        </div>
+
+        {/* 3D 뷰어 */}
+        <Scene3D />
+
+        {/* 안내 */}
+        <div className="mt-6 bg-gray-800 rounded-lg p-4">
+          <h3 className="text-white font-medium mb-2">인터랙션 가이드</h3>
+          <ul className="text-gray-400 text-sm space-y-1">
+            <li>• 드래그: 회전</li>
+            <li>• 스크롤: 줌 인/아웃</li>
+            <li>• Shift + 드래그: 이동</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+  );
+}
