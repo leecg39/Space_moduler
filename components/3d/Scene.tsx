@@ -7,6 +7,8 @@ import { FloorMesh } from './FloorMesh';
 import { WallMesh } from './WallMesh';
 import { DoorMesh } from './DoorMesh';
 import { WindowMesh } from './WindowMesh';
+import { ViewModeSelector, CAMERA_PRESETS } from './ViewModeSelector';
+import type { ViewMode } from '@/types';
 
 /**
  * Three.js 3D 씬 컴포넌트
@@ -14,6 +16,11 @@ import { WindowMesh } from './WindowMesh';
  */
 export function Scene3D() {
   const plan3D = useAppStore((state) => state.plan.plan3D);
+  const [viewMode, setViewMode] = useState<ViewMode>('perspective');
+
+  const handleViewChange = (mode: ViewMode) => {
+    setViewMode(mode);
+  };
 
   if (!plan3D) {
     return (
@@ -23,10 +30,16 @@ export function Scene3D() {
     );
   }
 
+  // 뷰 모드에 따른 카메라 설정
+  const cameraConfig = CAMERA_PRESETS[viewMode];
+
   return (
     <div className="w-full h-[600px] border border-gray-200 rounded-lg overflow-hidden">
       <Canvas
-        camera={{ position: plan3D.camera.position, fov: 50 }}
+        camera={{
+          position: cameraConfig.position,
+          fov: 50,
+        }}
         shadows
         style={{ background: '#f0f0f0' }}
       >
@@ -73,17 +86,9 @@ export function Scene3D() {
         </mesh>
       </Canvas>
 
-      {/* 뷰 모드 컨트롤 (추후 구현) */}
+      {/* 뷰 모드 컨트롤 */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-white rounded-lg shadow-lg p-2">
-        <button className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 text-sm">
-          상면
-        </button>
-        <button className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 text-sm">
-          정면
-        </button>
-        <button className="px-3 py-1 bg-primary-100 text-primary-700 rounded text-sm">
-          3D
-        </button>
+        <ViewModeSelector currentMode={viewMode} onViewChange={handleViewChange} />
       </div>
     </div>
   );
