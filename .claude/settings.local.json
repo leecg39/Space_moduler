@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(tasks-generator)",
+      "Skill(tasks-generator:*)",
+      "Bash(npm init -y)",
+      "Bash(npm install next@latest react@latest react-dom@latest typescript @types/react @types/node @types/react-dom tailwindcss postcss autoprefixer)",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(npm install)",
+      "Bash(npm install --verbose)",
+      "Bash(npm install zustand)"
+    ]
+  }
+}
