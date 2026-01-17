@@ -8,6 +8,7 @@ import {
   fileToDataUrl,
   type ValidationResult,
 } from '@/lib/utils/imageValidation';
+import type { AnalyzePlanResponse } from '@/types';
 
 /**
  * 이미지 업로드 컴포넌트
@@ -19,6 +20,7 @@ export function ImageUpload() {
   const [error, setError] = useState<string | null>(null);
 
   const setOriginalImage = useAppStore((state) => state.setOriginalImage);
+  const setAnalysis = useAppStore((state) => state.setAnalysis);
   const setLoading = useAppStore((state) => state.setLoading);
 
   // 드래그 오버 처리
@@ -70,9 +72,10 @@ export function ImageUpload() {
   const processFile = async (file: File) => {
     // 로딩 시작
     setLoading(true, '파일을 검증 중...', 0);
+    setError(null);
 
     try {
-      // 파일 검증
+      // 1. 파일 검증
       setUploadProgress(20);
       const validationResult: ValidationResult = await validateImageFile(file);
 
@@ -82,17 +85,35 @@ export function ImageUpload() {
         return;
       }
 
-      // 이미지 정보 추출
-      setUploadProgress(50);
+      // 2. 이미지 정보 추출
+      setUploadProgress(40);
       const imageInfo = await getImageInfo(file);
 
-      // Data URL 변환
-      setUploadProgress(80);
+      // 3. Data URL 변환
+      setUploadProgress(60);
       const dataUrl = await fileToDataUrl(file);
-
-      // 완료
-      setUploadProgress(100);
       setOriginalImage(dataUrl, file);
+
+      // 4. Gemini API 호출
+      setLoading(true, 'AI가 평면도를 분석 중...', 70);
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/analyze-plan', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result: AnalyzePlanResponse = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || '평면도 분석에 실패했습니다.');
+      }
+
+      // 5. 분석 결과 저장
+      setUploadProgress(100);
+      setAnalysis(result.data);
 
       // 잠시 후 로딩 해제
       setTimeout(() => {
@@ -100,7 +121,8 @@ export function ImageUpload() {
         setUploadProgress(0);
       }, 500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '파일 처리에 실패했습니다.');
+      const errorMessage = err instanceof Error ? err.message : '파일 처리에 실패했습니다.';
+      setError(errorMessage);
       setLoading(false);
       setUploadProgress(0);
     }
