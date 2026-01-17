@@ -3,6 +3,10 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useAppStore } from '@/lib/store';
+import { FloorMesh } from './FloorMesh';
+import { WallMesh } from './WallMesh';
+import { DoorMesh } from './DoorMesh';
+import { WindowMesh } from './WindowMesh';
 
 /**
  * Three.js 3D 씬 컴포넌트
@@ -41,16 +45,25 @@ export function Scene3D() {
           dampingFactor={0.05}
         />
 
-        {/* 3D 모델은 추후 구현 */}
+        {/* 3D 모델 */}
         <group>
           {/* 바닥 */}
-          <mesh
-            position={plan3D.floor.position}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={plan3D.floor.size} />
-            <meshStandardMaterial color="#f1f5f9" />
-          </mesh>
+          <FloorMesh config={plan3D.floor} />
+
+          {/* 벽 */}
+          {plan3D.walls.map((wall) => (
+            <WallMesh key={wall.id} config={wall} />
+          ))}
+
+          {/* 문 */}
+          {plan3D.doors.map((door) => (
+            <DoorMesh key={door.id} config={door} />
+          ))}
+
+          {/* 창문 */}
+          {plan3D.windows.map((window) => (
+            <WindowMesh key={window.id} config={window} />
+          ))}
         </group>
 
         {/* 카메라 타겟 표시 (디버깅용) */}
