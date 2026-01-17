@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppStore, FloorPlan, PlanAnalysis } from '@/types';
+import { convertPlanToScene3D } from '@/lib/utils/conversion';
 
 export const useAppStore = create<AppStore>()(
   persist(
@@ -110,12 +111,17 @@ export const useAppStore = create<AppStore>()(
       // 액션: 3D 재생성
       regenerate3D: () =>
         set((state) => {
-          // 2D 평면도를 3D로 변환하는 로직은 추후 구현
-          // 여기서는 placeholder로 null 설정
+          if (!state.plan.plan2D) {
+            return state;
+          }
+
+          // 2D 평면도를 3D로 변환
+          const plan3D = convertPlanToScene3D(state.plan.plan2D);
+
           return {
             plan: {
               ...state.plan,
-              plan3D: null,
+              plan3D,
             },
             ui: {
               ...state.ui,
