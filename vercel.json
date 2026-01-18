@@ -4,9 +4,6 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["sin1"],
-  "env": {
-    "GEMINI_API_KEY": "@gemini-api-key"
-  },
   "build": {
     "env": {
       "NEXT_PUBLIC_APP_URL": "$VERCEL_URL"
