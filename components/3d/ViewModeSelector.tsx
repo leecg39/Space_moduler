@@ -8,18 +8,25 @@ type ViewMode = 'top' | 'front' | 'perspective';
 interface ViewModeSelectorProps {
   currentMode?: ViewMode;
   onViewChange?: (mode: ViewMode) => void;
+  onCameraTransition?: (position: [number, number, number], lookAt: [number, number, number]) => void;
 }
 
 /**
  * 뷰 모드 선택기 컴포넌트
  * 상단/정면/3D 뷰 모드를 전환합니다.
  */
-export function ViewModeSelector({ currentMode = 'perspective', onViewChange }: ViewModeSelectorProps) {
+export function ViewModeSelector({ currentMode = 'perspective', onViewChange, onCameraTransition }: ViewModeSelectorProps) {
   const [mode, setMode] = useState<ViewMode>(currentMode);
 
   const handleModeChange = (newMode: ViewMode) => {
     setMode(newMode);
     onViewChange?.(newMode);
+
+    // 카메라 전환 애니메이션 트리거
+    if (onCameraTransition) {
+      const preset = CAMERA_PRESETS[newMode];
+      onCameraTransition(preset.position, preset.target);
+    }
   };
 
   const modes = [
