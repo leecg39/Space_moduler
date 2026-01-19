@@ -215,12 +215,7 @@ export async function analyzePlan(options: AnalyzePlanOptions): Promise<PlanAnal
     // JSON 정리: 잘못된 문자 제거
     jsonStr = jsonStr
       .replace(/,\s*}/g, '}')  // 후행 쉼표 제거 (객체)
-      .replace(/,\s*]/g, ']')  // 후행 쉼표 제거 (배열)
-      .replace(/[\x00-\x1F\x7F]/g, ' ')  // 제어 문자 제거
-      .replace(/\\/g, '\\\\')  // 이스케이프 처리
-      .replace(/\n/g, '\\n')  // 줄바꿈 이스케이프
-      .replace(/\r/g, '\\r')  // 캐리지 리턴 이스케이프
-      .replace(/\t/g, '\\t');  // 탭 이스케이프
+      .replace(/,\s*]/g, ']'); // 후행 쉼표 제거 (배열)
 
     try {
       const analysis: PlanAnalysis = JSON.parse(jsonStr);

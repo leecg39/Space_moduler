@@ -1,6 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
+
+const Canvas2D = dynamic(
+  () => import('@/components/2d/Canvas').then((mod) => mod.Canvas2D),
+  { ssr: false, loading: () => <div className="w-full h-full flex items-center justify-center text-stone-400">캔버스 로딩 중...</div> }
+);
 
 interface EditorPageProps {
   onOpen3D: () => void;
@@ -61,23 +67,18 @@ const EditorPage: React.FC<EditorPageProps> = ({ onOpen3D, onBack }) => {
           <ToolButton id="window" icon="window" label="창문 (N)" active={selectedTool === 'window'} onClick={() => setSelectedTool('window')} />
           <ToolButton id="room" icon="texture" label="방 (R)" active={selectedTool === 'room'} onClick={() => setSelectedTool('room')} />
           <div className="h-px bg-stone-200 my-1 mx-2"></div>
-          <ToolButton id="delete" icon="delete" label="삭제 (Del)" className="text-red-500 hover:bg-red-50" active={false} onClick={() => {}} />
+          <ToolButton id="delete" icon="delete" label="삭제 (Del)" className="text-red-500 hover:bg-red-50" active={false} onClick={() => { }} />
         </aside>
 
         {/* Main Canvas Area */}
         <main className="flex-1 relative canvas-grid bg-[#fdfbf7] flex items-center justify-center p-12">
-          {/* Mock Canvas Container */}
-          <div className="relative w-full h-full bg-white border border-stone-200 rounded shadow-inner max-w-4xl aspect-[4/3] flex items-center justify-center">
-             <div className="relative w-4/5 h-4/5 border-2 border-stone-800">
-               {/* Drawing Mockup */}
-               <div className="absolute top-0 left-1/4 w-[2px] h-full bg-stone-800 opacity-50"></div>
-               <div className="absolute top-1/2 left-0 w-full h-[2px] bg-stone-800 opacity-50"></div>
-
-               <div className="absolute top-4 left-4 p-2 bg-blue-50/50 border border-blue-200 rounded text-[10px] font-bold text-blue-800">안방 14.2m²</div>
-               <div className="absolute bottom-4 right-4 p-2 bg-stone-50 border border-stone-200 rounded text-[10px] font-bold">거실 32.5m²</div>
-
-               <div className="absolute top-0 left-1/2 -translate-x-1/2 px-2 bg-white -mt-3 text-xs text-blue-600 font-bold">4.50 m</div>
-             </div>
+          {/* Canvas2D Component - Uses real data from store */}
+          <div className="relative w-full h-full bg-white border border-stone-200 rounded shadow-inner max-w-4xl">
+            <Canvas2D
+              width={800}
+              height={600}
+              tool={selectedTool as 'select' | 'wall' | 'door' | 'window' | 'delete'}
+            />
           </div>
 
           <div className="absolute bottom-6 right-[340px] flex flex-col gap-1">
