@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useAppStore } from '@/lib/store';
 
 type ViewMode = 'top' | 'front' | 'perspective';
 

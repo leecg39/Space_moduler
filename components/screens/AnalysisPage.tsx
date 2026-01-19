@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 interface AnalysisPageProps {
   onComplete: () => void;
@@ -9,20 +9,32 @@ interface AnalysisPageProps {
 
 const AnalysisPage: React.FC<AnalysisPageProps> = ({ onComplete, onCancel }) => {
   const [progress, setProgress] = useState(0);
+  const hasCompletedRef = useRef(false);
 
+  // 진행률 업데이트 타이머
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(timer);
-          onComplete();
           return 100;
         }
         return prev + 1;
       });
     }, 60);
     return () => clearInterval(timer);
-  }, [onComplete]);
+  }, []);
+
+  // 완료 시 onComplete 호출 (렌더링 외부에서)
+  useEffect(() => {
+    if (progress >= 100 && !hasCompletedRef.current) {
+      hasCompletedRef.current = true;
+      // setTimeout으로 다음 이벤트 루프에서 실행
+      setTimeout(() => {
+        onComplete();
+      }, 100);
+    }
+  }, [progress, onComplete]);
 
   return (
     <div className="min-h-screen bg-[#f9f6ef] flex flex-col">

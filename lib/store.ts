@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AppStore, FloorPlan, PlanAnalysis } from '@/types';
+import type { AppStore, FloorPlan } from '@/types';
 import { convertPlanToScene3D } from '@/lib/utils/conversion';
 
 export const useAppStore = create<AppStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       // UI 상태 초기값
       ui: {
         currentView: 'upload',

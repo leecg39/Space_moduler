@@ -2,9 +2,10 @@ import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
 // Mock crypto.randomUUID
-global.crypto = {
-  randomUUID: () => 'test-uuid-' + Math.random().toString(36).substring(7),
-} as any;
+if (!global.crypto) {
+  (global as any).crypto = {};
+}
+global.crypto.randomUUID = () => 'test-uuid-' + Math.random().toString(36).substring(7);
 
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({

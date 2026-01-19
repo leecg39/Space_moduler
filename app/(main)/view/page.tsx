@@ -1,8 +1,16 @@
 'use client';
 
-import { Scene3D } from '@/components/3d/Scene';
+import dynamic from 'next/dynamic';
+import { useAppStore } from '@/lib/store';
+
+const Scene3D = dynamic(() => import('@/components/3d/Scene').then(mod => ({ default: mod.Scene3D })), {
+  ssr: false,
+  loading: () => <div className="w-full h-[600px] bg-gray-800 flex items-center justify-center">로딩 중...</div>
+});
 
 export default function ViewPage() {
+  const plan3D = useAppStore((state) => state.plan.plan3D);
+
   return (
     <main className="min-h-screen bg-gray-900">
       <div className="max-w-7xl mx-auto p-8">
@@ -26,11 +34,13 @@ export default function ViewPage() {
         <Scene3D />
 
         {/* 요약 정보 */}
-        <div className="mt-4 bg-gray-800 rounded-lg p-4">
-          <p className="text-sm text-gray-400">
-            <span className="text-white font-medium">요약:</span> 벽 {plan3D.walls.length}개, 문 {plan3D.doors.length}개, 창문 {plan3D.windows.length}개
-          </p>
-        </div>
+        {plan3D && (
+          <div className="mt-4 bg-gray-800 rounded-lg p-4">
+            <p className="text-sm text-gray-400">
+              <span className="text-white font-medium">요약:</span> 벽 {plan3D.walls.length}개, 문 {plan3D.doors.length}개, 창문 {plan3D.windows.length}개
+            </p>
+          </div>
+        )}
 
         {/* 안내 */}
         <div className="mt-4 bg-gray-800 rounded-lg p-4">

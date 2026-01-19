@@ -13,9 +13,16 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@react-three/drei": "^9.114.3",
+    "@react-three/fiber": "^8.17.10",
+    "konva": "^9.3.15",
     "next": "^15.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-konva": "^18.2.10",
+    "three": "^0.170.0",
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
@@ -25,6 +32,7 @@
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.160.0",
     "@vitest/coverage-v8": "^1.5.0",
     "@vitest/ui": "^1.5.0",
     "autoprefixer": "^10.0.0",

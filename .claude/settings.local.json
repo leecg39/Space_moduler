@@ -60,7 +60,12 @@
       "Bash(npx vercel --version)",
       "Bash(git add docs/planning/06-tasks.md)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\n업데이트: TASKS.md 모든 Phase 완료 상태로 업데이트\n\n- M0~M4 모든 마일스톤 완료 표시\n- T2.2, T3.3, T4.2, T4.3 완료 상태로 업데이트\n- 다음 우선순위 작업 업데이트\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\n버그: vercel.json 환경 변수 설정 수정\n\n- GEMINI_API_KEY Secret 참조 제거\n- Vercel 대시보드에서 직접 환경 변수 설정하도록 변경\n- 배포 시 \"@gemini-api-key\" Secret 오류 해결\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\n버그: vercel.json 환경 변수 설정 수정\n\n- GEMINI_API_KEY Secret 참조 제거\n- Vercel 대시보드에서 직접 환경 변수 설정하도록 변경\n- 배포 시 \"@gemini-api-key\" Secret 오류 해결\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npx next dev)",
+      "Bash(ls docs/planning/*.md)",
+      "Skill(auto-orchestrate)",
+      "Bash(npm install --legacy-peer-deps)",
+      "Bash(npm install --save-dev @types/three@0.160.0 --legacy-peer-deps)"
     ]
   }
 }

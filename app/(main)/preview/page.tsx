@@ -1,9 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Canvas2D } from '@/components/2d/Canvas';
-import { ToolBar } from '@/components/2d/ToolBar';
+import dynamic from 'next/dynamic';
 import { useAppStore } from '@/lib/store';
+
+const Canvas2D = dynamic(() => import('@/components/2d/Canvas').then(mod => ({ default: mod.Canvas2D })), {
+  ssr: false,
+});
+const ToolBar = dynamic(() => import('@/components/2d/ToolBar').then(mod => ({ default: mod.ToolBar })), {
+  ssr: false,
+});
 
 export default function PreviewPage() {
   const [currentTool, setCurrentTool] = useState<'select' | 'wall' | 'door' | 'window' | 'delete'>('select');

@@ -27,7 +27,7 @@ export const MIN_IMAGE_WIDTH = 500;
  * 파일 형식 검증
  */
 export function validateFileType(file: File): ValidationResult {
-  if (!SUPPORTED_FORMATS.includes(file.type as any)) {
+  if (!SUPPORTED_FORMATS.includes(file.type as typeof SUPPORTED_FORMATS[number])) {
     return {
       valid: false,
       error: '지원하지 않는 형식입니다. JPG, PNG, PDF만 가능합니다.',
@@ -60,7 +60,13 @@ export async function validateImageDimensions(file: File): Promise<ValidationRes
       return;
     }
 
-    const img = new Image();
+    // 서버 사이드에서는 검증 건너뜀
+    if (typeof window === 'undefined') {
+      resolve({ valid: true });
+      return;
+    }
+
+    const img = new window.Image();
     const url = URL.createObjectURL(file);
 
     img.onload = () => {
@@ -111,6 +117,16 @@ export async function validateImageFile(file: File): Promise<ValidationResult> {
  * 파일에서 이미지 정보 추출
  */
 export async function getImageInfo(file: File): Promise<ImageInfo> {
+  // 서버 사이드에서는 기본값 반환
+  if (typeof window === 'undefined') {
+    return {
+      file,
+      url: '',
+      width: 1920,
+      height: 1080,
+    };
+  }
+
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
 
@@ -125,7 +141,7 @@ export async function getImageInfo(file: File): Promise<ImageInfo> {
       return;
     }
 
-    const img = new Image();
+    const img = new window.Image();
 
     img.onload = () => {
       resolve({

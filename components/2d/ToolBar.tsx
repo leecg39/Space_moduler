@@ -14,7 +14,6 @@ interface ToolBarProps {
  */
 export function ToolBar({ onToolChange }: ToolBarProps) {
   const [activeTool, setActiveTool] = useState<Tool>('select');
-  const updatePlan2D = useAppStore((state) => state.updatePlan2D);
 
   const handleToolClick = (tool: Tool) => {
     setActiveTool(tool);

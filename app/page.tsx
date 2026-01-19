@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { LandingPage } from '@/components/screens/LandingPage';
-import { AnalysisPage } from '@/components/screens/AnalysisPage';
-import { EditorPage } from '@/components/screens/EditorPage';
-import { ViewerPage } from '@/components/screens/ViewerPage';
+import LandingPage from '@/components/screens/LandingPage';
+import AnalysisPage from '@/components/screens/AnalysisPage';
+import EditorPage from '@/components/screens/EditorPage';
+import ViewerPage from '@/components/screens/ViewerPage';
 import { AppStep } from '@/types';
 import { useAppStore } from '@/lib/store';
 

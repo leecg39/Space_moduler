@@ -1,4 +1,4 @@
-import { useState, useEffect, RefObject, useCallback } from 'react';
+import { useState, useEffect, useRef, RefObject, useCallback } from 'react';
 import { useAppStore } from '@/lib/store';
 import type { Wall, Door, Window } from '@/types';
 
@@ -18,7 +18,7 @@ export function useCanvasSize(imageUrl: string | null): UseCanvasSizeResult {
   useEffect(() => {
     if (!containerRef.current || !imageUrl) return;
 
-    const img = new Image();
+    const img = new window.Image();
     img.src = imageUrl;
 
     img.onload = () => {

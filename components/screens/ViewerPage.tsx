@@ -1,23 +1,93 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { useAppStore } from '@/lib/store';
+
+// SSR 방지를 위한 동적 import
+const ThreeViewer = dynamic(
+  () => import('@/components/3d/ThreeViewer').then(mod => mod.ThreeViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-stone-100">
+        <div className="text-center">
+          <span className="material-symbols-outlined text-4xl text-stone-400 animate-spin">progress_activity</span>
+          <p className="text-stone-500 mt-2">3D 뷰어 로딩 중...</p>
+        </div>
+      </div>
+    )
+  }
+);
 
 interface ViewerPageProps {
   onBack: () => void;
 }
 
 const ViewerPage: React.FC<ViewerPageProps> = ({ onBack }) => {
-  const [view, setView] = useState('3d');
+  const [view, setView] = useState<'top' | 'front' | '3d'>('3d');
+
+  // Store에서 데이터 가져오기
+  const originalImage = useAppStore((state) => state.plan.originalImage);
+  const plan2D = useAppStore((state) => state.plan.plan2D);
+  const analysis = useAppStore((state) => state.plan.analysis);
 
   return (
     <div className="h-screen bg-[#F9F7F2] relative flex flex-col overflow-hidden">
-      {/* 3D Scene Mockup (Full background) */}
+      {/* Main View Area */}
       <div className="absolute inset-0 z-0">
-        <div className="w-full h-full bg-[radial-gradient(circle_at_center,#E5E1D8_0%,#DCD7CC_100%)] flex items-center justify-center">
-           <div className="relative w-2/3 max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.25)] border-8 border-white/40">
-              <img src="https://picsum.photos/1200/800?room=1" alt="3D View" className="w-full h-full object-cover" />
-           </div>
-        </div>
+        {view === '3d' ? (
+          // 3D 뷰 - ThreeViewer 컴포넌트 사용
+          <div className="w-full h-full">
+            <ThreeViewer className="w-full h-full" />
+          </div>
+        ) : view === 'top' ? (
+          // 평면 뷰 - 원본 이미지 표시
+          <div className="w-full h-full bg-[radial-gradient(circle_at_center,#E5E1D8_0%,#DCD7CC_100%)] flex items-center justify-center">
+            <div className="relative w-2/3 max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.25)] border-8 border-white/40">
+              {originalImage ? (
+                <img src={originalImage} alt="평면도" className="w-full h-full object-contain bg-white" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-stone-100">
+                  <p className="text-stone-500">평면도 이미지가 없습니다</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          // 정면 뷰 - 분석 결과 표시
+          <div className="w-full h-full bg-[radial-gradient(circle_at_center,#E5E1D8_0%,#DCD7CC_100%)] flex items-center justify-center">
+            <div className="bg-white/80 backdrop-blur p-8 rounded-2xl shadow-xl max-w-2xl">
+              <h3 className="text-xl font-bold mb-4">분석 결과</h3>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-xl text-center">
+                  <p className="text-3xl font-bold text-blue-600">{analysis?.walls?.length || 0}</p>
+                  <p className="text-sm text-blue-600">벽</p>
+                </div>
+                <div className="bg-amber-50 p-4 rounded-xl text-center">
+                  <p className="text-3xl font-bold text-amber-600">{analysis?.doors?.length || 0}</p>
+                  <p className="text-sm text-amber-600">문</p>
+                </div>
+                <div className="bg-cyan-50 p-4 rounded-xl text-center">
+                  <p className="text-3xl font-bold text-cyan-600">{analysis?.windows?.length || 0}</p>
+                  <p className="text-sm text-cyan-600">창문</p>
+                </div>
+              </div>
+              {analysis?.rooms && analysis.rooms.length > 0 && (
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-2">감지된 공간</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.rooms.map((room, i) => (
+                      <span key={i} className="px-3 py-1 bg-stone-100 rounded-full text-sm">
+                        {room.name || `공간 ${i + 1}`}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Header */}
@@ -67,7 +137,7 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ onBack }) => {
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
         <div className="bg-white/80 backdrop-blur p-2 rounded-2xl shadow-xl flex items-center justify-between border border-white/50">
           <ViewToggle id="top" label="평면 뷰" active={view === 'top'} onClick={() => setView('top')} />
-          <ViewToggle id="front" label="정면 뷰" active={view === 'front'} onClick={() => setView('front')} />
+          <ViewToggle id="front" label="분석 결과" active={view === 'front'} onClick={() => setView('front')} />
           <ViewToggle id="3d" label="3D 뷰" active={view === '3d'} onClick={() => setView('3d')} />
         </div>
       </div>
@@ -96,12 +166,12 @@ const ViewerPage: React.FC<ViewerPageProps> = ({ onBack }) => {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3 custom-scrollbar">
-            <FurnitureItem title="3인용 모던 소파" size="2100 x 950 x 850" img="https://picsum.photos/200/200?u=10" />
-            <FurnitureItem title="라운지 암체어" size="850 x 800 x 900" img="https://picsum.photos/200/200?u=11" />
-            <FurnitureItem title="원목 원형 테이블" size="900 x 900 x 420" img="https://picsum.photos/200/200?u=12" />
-            <FurnitureItem title="미니멀 거실장" size="1800 x 400 x 450" img="https://picsum.photos/200/200?u=13" />
-            <FurnitureItem title="패브릭 프레임 침대" size="1600 x 2100 x 1100" img="https://picsum.photos/200/200?u=14" />
-            <FurnitureItem title="오픈 북케이스" size="1200 x 300 x 1800" img="https://picsum.photos/200/200?u=15" />
+            <FurnitureItem title="3인용 모던 소파" size="2100 x 950 x 850" />
+            <FurnitureItem title="라운지 암체어" size="850 x 800 x 900" />
+            <FurnitureItem title="원목 원형 테이블" size="900 x 900 x 420" />
+            <FurnitureItem title="미니멀 거실장" size="1800 x 400 x 450" />
+            <FurnitureItem title="패브릭 프레임 침대" size="1600 x 2100 x 1100" />
+            <FurnitureItem title="오픈 북케이스" size="1200 x 300 x 1800" />
           </div>
 
           <div className="p-4 bg-stone-50 border-t border-stone-200/30">
@@ -141,10 +211,10 @@ const CategoryButton: React.FC<{ icon: string; label: string; active?: boolean }
   </button>
 );
 
-const FurnitureItem: React.FC<{ title: string; size: string; img: string }> = ({ title, size, img }) => (
+const FurnitureItem: React.FC<{ title: string; size: string }> = ({ title, size }) => (
   <div className="group cursor-move bg-white/40 border border-white/60 p-2 rounded-xl hover:bg-white hover:shadow-md transition-all">
-    <div className="aspect-square bg-stone-100 rounded-lg mb-2 overflow-hidden">
-      <img src={img} alt={title} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+    <div className="aspect-square bg-stone-200 rounded-lg mb-2 overflow-hidden flex items-center justify-center">
+      <span className="material-symbols-outlined text-4xl text-stone-400">chair</span>
     </div>
     <p className="text-[11px] font-semibold text-stone-700 truncate">{title}</p>
     <p className="text-[9px] text-stone-400">{size}</p>

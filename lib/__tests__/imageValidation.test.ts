@@ -63,7 +63,7 @@ describe('imageValidation', () => {
 
       const dataUrl = await fileToDataUrl(file);
 
-      expect(dataUrl).startsWith('data:image/jpeg;base64,');
+      expect(dataUrl).toMatch(/^data:image\/jpeg;base64,/);
     });
 
     it('should handle empty file', async () => {

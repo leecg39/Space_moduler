@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Stage, Layer, Rect, Line, Circle, Group } from 'react-konva';
 import { useAppStore } from '@/lib/store';
-import type { Wall, Door, Window } from '@/types';
+import type { Wall, Door, Window, Point2D } from '@/types';
 
 interface Canvas2DProps {
   width: number;
@@ -11,51 +11,13 @@ interface Canvas2DProps {
   tool?: 'select' | 'wall' | 'door' | 'window' | 'delete';
 }
 
-// 선택 하이라이트 컴포넌트
-function SelectionHighlight({ element, selected }: { element: any; selected: boolean }) {
-  if (!selected) return null;
-
-  if (element.type === 'wall') {
-    const wall = element as Wall;
-    return (
-      <>
-        <Line
-          points={[wall.start.x, wall.start.y, wall.end.x, wall.end.y]}
-          stroke="#3B82F6"
-          strokeWidth={wall.thickness * 50 + 8}
-          lineCap="round"
-          lineJoin="round"
-          opacity={0.3}
-        />
-        <Circle
-          x={wall.start.x}
-          y={wall.start.y}
-          radius={8}
-          fill="#3B82F6"
-          stroke="white"
-          strokeWidth={2}
-          draggable
-          onDragMove={(e) => {
-            // 핸들 드래그 로직
-          }}
-        />
-        <Circle
-          x={wall.end.x}
-          y={wall.end.y}
-          radius={8}
-          fill="#3B82F6"
-          stroke="white"
-          strokeWidth={2}
-          draggable
-          onDragMove={(e) => {
-            // 핸들 드래그 로직
-          }}
-        />
-      </>
-    );
-  }
-
-  return null;
+interface KonvaEvent {
+  evt: {
+    preventDefault: () => void;
+    deltaY: number;
+  };
+  target: any;
+  cancelBubble?: boolean;
 }
 
 /**
@@ -66,13 +28,12 @@ export function Canvas2D({ width, height, tool = 'select' }: Canvas2DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [draggedElement, setDraggedElement] = useState<{ id: string; startPos: { x: number; y: number } } | null>(null);
-  const [drawingWall, setDrawingWall] = useState<{ start: { x: number; y: number } | null }>({
+  const [draggedElement, setDraggedElement] = useState<{ id: string; startPos: Point2D } | null>(null);
+  const [drawingWall, setDrawingWall] = useState<{ start: Point2D | null }>({
     start: null,
   });
+  const [imageObj, setImageObj] = useState<HTMLImageElement | null>(null);
 
   const plan2D = useAppStore((state) => state.plan.plan2D);
   const originalImage = useAppStore((state) => state.plan.originalImage);
@@ -99,7 +60,7 @@ export function Canvas2D({ width, height, tool = 'select' }: Canvas2DProps) {
   // 이미지 로드 후 캔버스 크기 조정
   useEffect(() => {
     if (containerRef.current && originalImage) {
-      const img = new Image();
+      const img = new window.Image();
       img.src = originalImage;
       img.onload = () => {
         const containerWidth = containerRef.current!.clientWidth;
@@ -109,18 +70,19 @@ export function Canvas2D({ width, height, tool = 'select' }: Canvas2DProps) {
           1
         );
         setScale(newScale);
+        setImageObj(img);
       };
     }
   }, [originalImage]);
 
   // 휠 줌
-  const handleWheel = (e: any) => {
+  const handleWheel = useCallback((e: KonvaEvent) => {
     e.evt.preventDefault();
     const scaleBy = 1.1;
     const oldScale = scale;
     const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
     setScale(Math.max(0.1, Math.min(newScale, 5)));
-  };
+  }, [scale]);
 
   // 요소 클릭 핸들러
   const handleElementClick = useCallback((e: any, id: string) => {
@@ -210,14 +172,12 @@ export function Canvas2D({ width, height, tool = 'select' }: Canvas2DProps) {
   }, []);
 
   // 배경 클릭 (선택 해제)
-  const handleStageClick = useCallback((e: any) => {
-    if (e.target === e.target.getStage()) {
-      setSelectedId(null);
-    }
+  const handleStageClick = useCallback(() => {
+    setSelectedId(null);
   }, []);
 
   // 캔버스 클릭 핸들러 (새 요소 추가)
-  const handleCanvasClick = (e: any) => {
+  const handleCanvasClick = useCallback((e: any) => {
     const stage = e.target.getStage();
     const pos = stage.getPointerPosition();
 
@@ -254,7 +214,7 @@ export function Canvas2D({ width, height, tool = 'select' }: Canvas2DProps) {
       };
       updatePlan2D({ windows: [...(plan2D?.windows || []), newWindow] });
     }
-  };
+  }, [tool, drawingWall, plan2D, updatePlan2D]);
 
   // Delete 키 핸들링
   useEffect(() => {
@@ -304,14 +264,16 @@ export function Canvas2D({ width, height, tool = 'select' }: Canvas2DProps) {
       >
         <Layer>
           {/* 배경 이미지 */}
-          <Rect
-            x={0}
-            y={0}
-            width={plan2D.metadata.scale > 0 ? width / plan2D.metadata.scale : width}
-            height={plan2D.metadata.scale > 0 ? height / plan2D.metadata.scale : height}
-            fillPatternImage={originalImage}
-            onClick={handleCanvasClick}
-          />
+          {imageObj && (
+            <Rect
+              x={0}
+              y={0}
+              width={plan2D.metadata.scale > 0 ? width / plan2D.metadata.scale : width}
+              height={plan2D.metadata.scale > 0 ? height / plan2D.metadata.scale : height}
+              fillPatternImage={imageObj}
+              onClick={handleCanvasClick}
+            />
+          )}
         </Layer>
 
         <Layer>
