@@ -77,11 +77,15 @@ export const useAppStore = create<AppStore>()(
             },
           };
 
+          // 2D 평면도를 3D로 변환
+          const plan3D = convertPlanToScene3D(plan2D);
+
           return {
             plan: {
               ...state.plan,
               analysis,
               plan2D,
+              plan3D,
             },
             ui: {
               ...state.ui,

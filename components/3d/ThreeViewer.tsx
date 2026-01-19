@@ -12,6 +12,7 @@ interface ThreeViewerProps {
 /**
  * 순수 Three.js 기반 3D 뷰어 컴포넌트
  * React 19와 호환됩니다.
+ * plan3D 데이터를 사용하여 3D 씬을 렌더링합니다.
  */
 export function ThreeViewer({ className = '' }: ThreeViewerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -21,8 +22,7 @@ export function ThreeViewer({ className = '' }: ThreeViewerProps) {
     const controlsRef = useRef<OrbitControls | null>(null);
     const animationIdRef = useRef<number>(0);
 
-    const plan2D = useAppStore((state) => state.plan.plan2D);
-    const analysis = useAppStore((state) => state.plan.analysis);
+    const plan3D = useAppStore((state) => state.plan.plan3D);
 
     // 3D 씬 생성
     const createScene = useCallback(() => {
@@ -70,93 +70,79 @@ export function ThreeViewer({ className = '' }: ThreeViewerProps) {
         const gridHelper = new THREE.GridHelper(20, 20, 0xcccccc, 0xe0e0e0);
         scene.add(gridHelper);
 
-        // 바닥 생성
-        const floorGeometry = new THREE.PlaneGeometry(20, 20);
-        const floorMaterial = new THREE.MeshStandardMaterial({
-            color: 0xeeeeee,
-            side: THREE.DoubleSide
-        });
-        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-        floor.rotation.x = -Math.PI / 2;
-        floor.position.y = -0.01;
-        floor.receiveShadow = true;
-        scene.add(floor);
-
-        // 분석 데이터로 벽 생성
-        if (analysis?.walls && analysis.walls.length > 0) {
-            analysis.walls.forEach((wall, index) => {
-                const startX = (wall.start.x / 100) - 5;
-                const startZ = (wall.start.y / 100) - 5;
-                const endX = (wall.end.x / 100) - 5;
-                const endZ = (wall.end.y / 100) - 5;
-
-                const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endZ - startZ, 2));
-                const angle = Math.atan2(endZ - startZ, endX - startX);
-
-                const wallGeometry = new THREE.BoxGeometry(length, 2.5, 0.2);
-                const wallMaterial = new THREE.MeshStandardMaterial({
+        // plan3D 데이터로 3D 씬 생성
+        if (plan3D) {
+            // 벽 생성
+            plan3D.walls.forEach((wall) => {
+                const geometry = new THREE.BoxGeometry(...wall.size);
+                const material = new THREE.MeshStandardMaterial({
                     color: 0x8b7355,
                     roughness: 0.8
                 });
-                const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
-
-                wallMesh.position.set(
-                    (startX + endX) / 2,
-                    1.25,
-                    (startZ + endZ) / 2
-                );
-                wallMesh.rotation.y = -angle;
-                wallMesh.castShadow = true;
-                wallMesh.receiveShadow = true;
-
-                scene.add(wallMesh);
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(...wall.position);
+                mesh.rotation.set(...wall.rotation);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                scene.add(mesh);
             });
-        } else {
-            // 데모용 벽 생성 (분석 데이터가 없는 경우)
-            createDemoRoom(scene);
-        }
 
-        // 문 생성
-        if (analysis?.doors && analysis.doors.length > 0) {
-            analysis.doors.forEach((door) => {
-                const doorGeometry = new THREE.BoxGeometry(0.9, 2.1, 0.1);
-                const doorMaterial = new THREE.MeshStandardMaterial({
+            // 문 생성
+            plan3D.doors.forEach((door) => {
+                const geometry = new THREE.BoxGeometry(...door.size);
+                const material = new THREE.MeshStandardMaterial({
                     color: 0x654321,
                     roughness: 0.5
                 });
-                const doorMesh = new THREE.Mesh(doorGeometry, doorMaterial);
-
-                doorMesh.position.set(
-                    (door.position.x / 100) - 5,
-                    1.05,
-                    (door.position.y / 100) - 5
-                );
-                doorMesh.castShadow = true;
-
-                scene.add(doorMesh);
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(...door.position);
+                mesh.rotation.set(...door.rotation);
+                mesh.castShadow = true;
+                scene.add(mesh);
             });
-        }
 
-        // 창문 생성
-        if (analysis?.windows && analysis.windows.length > 0) {
-            analysis.windows.forEach((window) => {
-                const windowGeometry = new THREE.BoxGeometry(window.width || 1.2, window.height || 1.5, 0.1);
-                const windowMaterial = new THREE.MeshStandardMaterial({
+            // 창문 생성
+            plan3D.windows.forEach((window) => {
+                const geometry = new THREE.BoxGeometry(...window.size);
+                const material = new THREE.MeshStandardMaterial({
                     color: 0x87ceeb,
                     transparent: true,
                     opacity: 0.6,
                     roughness: 0.1
                 });
-                const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
-
-                windowMesh.position.set(
-                    (window.position.x / 100) - 5,
-                    1.5,
-                    (window.position.y / 100) - 5
-                );
-
-                scene.add(windowMesh);
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(...window.position);
+                mesh.rotation.set(...window.rotation);
+                scene.add(mesh);
             });
+
+            // 바닥 생성
+            if (plan3D.floor) {
+                const floorGeometry = new THREE.PlaneGeometry(plan3D.floor.size[0], plan3D.floor.size[1]);
+                const floorMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xeeeeee,
+                    side: THREE.DoubleSide
+                });
+                const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.set(...plan3D.floor.position);
+                floor.position.y = -0.01;
+                floor.receiveShadow = true;
+                scene.add(floor);
+
+                // 카메라를 바닥 중심에 맞춤
+                const floorCenter = plan3D.floor.position;
+                controls.target.set(floorCenter[0], 0, floorCenter[2]);
+                camera.position.set(
+                    floorCenter[0] + 10,
+                    15,
+                    floorCenter[2] + 10
+                );
+                camera.lookAt(floorCenter[0], 0, floorCenter[2]);
+            }
+        } else {
+            // 데모용 룸 생성 (plan3D 데이터가 없는 경우)
+            createDemoRoom(scene);
         }
 
         // 레퍼런스 저장
@@ -192,9 +178,9 @@ export function ThreeViewer({ className = '' }: ThreeViewerProps) {
                 container.removeChild(renderer.domElement);
             }
         };
-    }, [analysis]);
+    }, [plan3D]);
 
-    // 데모 룸 생성 (분석 데이터가 없는 경우)
+    // 데모 룸 생성 (plan3D 데이터가 없는 경우)
     const createDemoRoom = (scene: THREE.Scene) => {
         const wallMaterial = new THREE.MeshStandardMaterial({
             color: 0x8b7355,
@@ -267,6 +253,18 @@ export function ThreeViewer({ className = '' }: ThreeViewerProps) {
         const window2 = new THREE.Mesh(windowGeometry, windowMaterial);
         window2.position.set(2, 1.5, -4);
         scene.add(window2);
+
+        // 바닥
+        const floorGeometry = new THREE.PlaneGeometry(20, 20);
+        const floorMaterial = new THREE.MeshStandardMaterial({
+            color: 0xeeeeee,
+            side: THREE.DoubleSide
+        });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.01;
+        floor.receiveShadow = true;
+        scene.add(floor);
     };
 
     useEffect(() => {

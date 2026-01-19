@@ -73,7 +73,6 @@ export interface WallMesh3D {
 
 export interface DoorMesh3D {
   id: string;
-  name: string;
   position: [number, number, number];
   size: [number, number, number];
   rotation: [number, number, number];
@@ -81,7 +80,6 @@ export interface DoorMesh3D {
 
 export interface WindowMesh3D {
   id: string;
-  name: string;
   position: [number, number, number];
   size: [number, number, number];
   rotation: [number, number, number];

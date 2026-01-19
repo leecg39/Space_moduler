@@ -77,6 +77,7 @@ export function convertWindowToMesh3D(window: Window, scale: number): WindowMesh
 
 /**
  * 방 경계에서 바닥 메시 생성
+ * 모든 방의 경계를 고려하여 바닥 크기를 계산합니다.
  */
 export function createFloorMesh3D(rooms: FloorPlan['rooms'], scale: number): FloorMesh3D {
   if (rooms.length === 0) {
@@ -87,16 +88,27 @@ export function createFloorMesh3D(rooms: FloorPlan['rooms'], scale: number): Flo
     };
   }
 
-  // 첫 번째 방의 경계를 사용하여 바닥 크기 계산
-  const boundary = rooms[0].boundary;
-  const minX = Math.min(...boundary.map((p) => p.x));
-  const maxX = Math.max(...boundary.map((p) => p.x));
-  const minZ = Math.min(...boundary.map((p) => -p.y));
-  const maxZ = Math.max(...boundary.map((p) => -p.y));
+  // 모든 방의 경계를 사용하여 바닥 크기 계산
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+  rooms.forEach(room => {
+    room.boundary.forEach(point => {
+      minX = Math.min(minX, point.x);
+      maxX = Math.max(maxX, point.x);
+      minY = Math.min(minY, point.y);
+      maxY = Math.max(maxY, point.y);
+    });
+  });
+
+  // 3D 좌표계에서는 Y가 Z로 변환됨 (음수값)
+  const centerX = (minX + maxX) / 2 * scale;
+  const centerZ = -(minY + maxY) / 2 * scale;
+  const width = (maxX - minX) * scale;
+  const depth = (maxY - minY) * scale;
 
   return {
-    position: [(minX + maxX) / 2 * scale, 0, (minZ + maxZ) / 2 * scale],
-    size: [(maxX - minX) * scale, (maxZ - minZ) * scale, 0.01],
+    position: [centerX, 0, centerZ],
+    size: [width, depth, 0.01],
   };
 }
 
